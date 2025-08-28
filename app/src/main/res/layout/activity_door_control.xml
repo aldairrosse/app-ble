@@ -1,0 +1,370 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/main"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fitsSystemWindows="true"
+    tools:context=".DoorControl">
+
+    <LinearLayout
+        android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="80dp"
+            android:id="@+id/app_bar">
+
+            <Button
+                android:id="@+id/back_button"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="4dp"
+                android:contentDescription="Salir"
+                app:icon="@drawable/baseline_arrow_back_24"
+                app:iconTint="?attr/colorOnSurface"
+                style="@style/Widget.Material3.Button.IconButton"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/device_type"
+                style="@style/Widget.Material3.CardView.Filled"
+                android:layout_marginLeft="4dp"
+                app:cardCornerRadius="100dp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintStart_toEndOf="@id/back_button"
+                app:layout_constraintBottom_toBottomOf="parent">
+
+                <View
+                    android:layout_margin="12dp"
+                    android:backgroundTint="?attr/colorPrimary"
+                    android:background="@drawable/outline_sensor_door_24"
+                    android:layout_width="32dp"
+                    android:layout_height="32dp" />
+
+            </com.google.android.material.card.MaterialCardView>
+
+            <LinearLayout
+                android:orientation="vertical"
+                android:layout_width="0dp"
+                android:layout_marginLeft="16dp"
+                android:layout_height="wrap_content"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toEndOf="@id/device_type"
+                app:layout_constraintTop_toTopOf="parent">
+
+                <TextView
+                    android:id="@+id/device_name"
+                    style="@style/TextAppearance.Material3.TitleLarge"
+                    android:text="B-010510"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" />
+
+
+                <TextView
+                    android:layout_marginTop="4dp"
+                    android:id="@+id/device_status"
+                    android:text="Conectando..."
+                    android:alpha="0.8"
+                    style="@style/TextAppearance.Material3.BodySmall"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" />
+
+
+            </LinearLayout>
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+
+        <com.google.android.flexbox.FlexboxLayout
+            android:id="@+id/action_bar"
+            android:layout_width="match_parent"
+            android:layout_marginHorizontal="16dp"
+            android:layout_marginTop="4dp"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            app:justifyContent="center"
+            app:flexWrap="wrap">
+
+            <LinearLayout
+                android:orientation="vertical"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content">
+
+                <Button
+                    android:id="@+id/sync_button"
+                    android:layout_gravity="center_horizontal"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:contentDescription="Conectar"
+                    android:drawableTint="?attr/colorPrimary"
+                    android:drawableLeft="@drawable/baseline_sync_24"
+                    style="@style/Widget.Material3.Button.IconButton.Outlined"
+                    tools:ignore="RtlHardcoded,UnusedAttribute" />
+
+                <TextView
+                    android:id="@+id/sync_label"
+                    style="@style/TextAppearance.Material3.BodyMedium"
+                    android:layout_marginTop="4dp"
+                    android:layout_gravity="center_horizontal"
+                    android:text="Conectar"
+                    android:alpha="0.7"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" />
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_marginStart="16dp"
+                android:orientation="vertical"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content">
+
+                <Button
+                    android:id="@+id/close_button"
+                    android:layout_gravity="center_horizontal"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:contentDescription="Desconectar"
+                    android:drawableTint="?attr/colorPrimary"
+                    android:drawableLeft="@drawable/baseline_close_24"
+                    style="@style/Widget.Material3.Button.IconButton.Outlined"
+                    tools:ignore="RtlHardcoded,UnusedAttribute" />
+
+                <TextView
+                    android:id="@+id/close_label"
+                    style="@style/TextAppearance.Material3.BodyMedium"
+                    android:layout_marginTop="4dp"
+                    android:layout_gravity="center_horizontal"
+                    android:alpha="0.7"
+                    android:text="Desconectar"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" />
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_marginStart="16dp"
+                android:orientation="vertical"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content">
+
+                <Button
+                    android:id="@+id/time_button"
+                    android:layout_gravity="center_horizontal"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:contentDescription="Tiempo"
+                    android:drawableTint="?attr/colorPrimary"
+                    android:drawableLeft="@drawable/baseline_update_24"
+                    style="@style/Widget.Material3.Button.IconButton.Outlined"
+                    tools:ignore="RtlHardcoded,UnusedAttribute" />
+
+                <TextView
+                    android:id="@+id/time_button_label_1"
+                    style="@style/TextAppearance.Material3.BodyMedium"
+                    android:layout_marginTop="4dp"
+                    android:layout_gravity="center_horizontal"
+                    android:text="Sincronizar"
+                    android:alpha="0.7"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" />
+
+                <TextView
+                    android:id="@+id/time_button_label_2"
+                    style="@style/TextAppearance.Material3.BodyMedium"
+                    android:layout_gravity="center_horizontal"
+                    android:text="tiempo"
+                    android:alpha="0.7"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" />
+
+            </LinearLayout>
+
+        </com.google.android.flexbox.FlexboxLayout>
+
+        <LinearLayout
+            android:id="@+id/time_layout"
+            android:layout_gravity="center_horizontal"
+            android:orientation="vertical"
+            android:layout_marginTop="16dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content">
+
+            <com.google.android.material.card.MaterialCardView
+                android:layout_gravity="center_horizontal"
+                style="@style/Widget.Material3.CardView.Filled"
+                app:cardCornerRadius="8dp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_margin="4dp">
+
+                <LinearLayout
+                    android:orientation="horizontal"
+                    android:paddingHorizontal="8dp"
+                    android:paddingVertical="4dp"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content">
+                    <View
+                        android:id="@+id/time_success"
+                        android:background="@drawable/baseline_check_circle_outline_24"
+                        android:layout_gravity="center_vertical"
+                        android:backgroundTint="#10A010"
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"/>
+                    <View
+                        android:id="@+id/time_error"
+                        android:background="@drawable/baseline_close_24"
+                        android:layout_gravity="center_vertical"
+                        android:backgroundTint="#BF2222"
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"/>
+
+                    <TextView
+                        android:id="@+id/label_time"
+                        android:layout_gravity="center_vertical"
+                        style="@style/TextAppearance.Material3.TitleSmall"
+                        android:layout_marginStart="4dp"
+                        android:text="30/07/2024 12:04:00"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"/>
+                </LinearLayout>
+
+            </com.google.android.material.card.MaterialCardView>
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/action_layout"
+            android:orientation="vertical"
+            android:layout_marginTop="24dp"
+            android:layout_marginHorizontal="24dp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <LinearLayout
+                android:layout_marginBottom="4dp"
+                android:orientation="horizontal"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <TextView
+                    style="@style/TextAppearance.Material3.TitleMedium"
+                    android:text="Puerta"
+                    android:layout_weight="1"
+                    android:layout_width="0dp"
+                    android:layout_gravity="center_vertical"
+                    android:layout_height="wrap_content" />
+
+                <com.google.android.material.card.MaterialCardView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content">
+
+                    <LinearLayout
+                        android:paddingVertical="4dp"
+                        android:paddingHorizontal="12dp"
+                        android:orientation="horizontal"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content">
+
+                        <View
+                            android:id="@+id/icon_closed"
+                            android:backgroundTint="#BF2222"
+                            android:background="@drawable/baseline_lock_outline_24"
+                            android:layout_width="24dp"
+                            android:layout_height="24dp" />
+
+                        <View
+                            android:id="@+id/icon_opened"
+                            android:background="@drawable/baseline_lock_open_24"
+                            android:backgroundTint="#10A010"
+                            android:layout_width="24dp"
+                            android:layout_height="24dp" />
+
+                        <TextView
+                            android:id="@+id/door_state"
+                            android:text="Abierta"
+                            android:layout_marginStart="4dp"
+                            style="@style/TextAppearance.Material3.BodySmall"
+                            android:layout_gravity="center_vertical"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"/>
+
+                    </LinearLayout>
+
+                </com.google.android.material.card.MaterialCardView>
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:orientation="horizontal"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/button_closed"
+                    android:text="Cerrar"
+                    android:layout_weight="1"
+                    android:textColor="#FFF"
+                    android:backgroundTint="#BF2222"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/button_opened"
+                    android:text="Abrir"
+                    android:layout_weight="1"
+                    android:layout_marginStart="8dp"
+                    android:textColor="#FFF"
+                    android:backgroundTint="#10A010"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content" />
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:orientation="vertical"
+            android:layout_marginTop="24dp"
+            android:layout_marginHorizontal="24dp"
+            android:layout_marginBottom="8dp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <TextView
+                style="@style/TextAppearance.Material3.TitleMedium"
+                android:text="Mensajes Bluetooth"
+                android:layout_marginBottom="8dp"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
+
+            <com.google.android.material.card.MaterialCardView
+                style="@style/Widget.Material3.CardView.Outlined"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <com.fapr.bluetoothcontrol.ui.views.GrowRecycler
+                    android:id="@+id/log_list"
+                    android:nestedScrollingEnabled="false"
+                    android:overScrollMode="never"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"/>
+
+            </com.google.android.material.card.MaterialCardView>
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+
+</ScrollView>
