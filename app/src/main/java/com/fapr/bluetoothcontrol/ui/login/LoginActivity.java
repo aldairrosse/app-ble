@@ -90,6 +90,7 @@ public class LoginActivity extends AppCompatActivity {
     }
 
     private void saveToken(String token, List<String> devices) {
+        Log.v("TokenSaved", token + ":" + devices);
         SharedPreferences prefs = getSharedPreferences(SETTINGS_DATA, MODE_PRIVATE);
         SharedPreferences.Editor editor = prefs.edit();
         editor.putString(CLIENT_TOKEN, token);

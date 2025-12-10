@@ -19,6 +19,8 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.provider.Settings;
 import android.util.Log;
 import android.view.View;
@@ -302,7 +304,8 @@ public class MainControl extends AppCompatActivity implements BluetoothService.B
             lockFound.clear();
             devicesList.setAdapter(new DeviceListAdapter(lockFound, item -> {}));
             labelDevices.setText("Buscando dispositivos de anti-asalto...");
-            service.searchClassicDevices();
+            service.searchLEDevices();
+            new Handler(Looper.getMainLooper()).postDelayed(() -> service.searchClassicDevices(), 3000);
         }
     }
 
@@ -382,7 +385,10 @@ public class MainControl extends AppCompatActivity implements BluetoothService.B
     public void onFoundLEDevice(String name, String address, byte[] data) {
         if(address == null || name == null) return;
         if(!startsWithHeader(data)) return;
-        handleFoundDevice(name, address, DoorControl.class, doorFound);
+        if(type == SENSOR_TYPE_DOOR)
+            handleFoundDevice(name, address, DoorControl.class, doorFound);
+        if(type == SENSOR_TYPE_LOCK)
+            handleFoundDevice(name, address, MotorControl.class, lockFound);
     }
 
     @SuppressLint("HardwareIds")
@@ -411,12 +417,27 @@ public class MainControl extends AppCompatActivity implements BluetoothService.B
         }
 
         String mac = normalizeMac(item.getMac());
-        if(!devices.contains(mac)) {
+        String prefix = "ANT-" + mac;
+        boolean autorizado = false;
+
+        if (type == SENSOR_TYPE_DOOR) {
+            if (devices.contains(mac)) {
+                autorizado = true;
+            }
+        } else if (type == SENSOR_TYPE_LOCK) {
+            if (devices.contains(prefix)) {
+                autorizado = true;
+            }
+        }
+
+        if (!autorizado) {
+            Log.v("Validation", "MAC=" + item.getMac() + " Normalizada=" + mac + " Lista=" + devices);
             showAlert("El dispositivo no está registrado con el cliente. Verifique con el administrador o pide una llave.");
             return;
         }
 
         Intent intent = new Intent(getApplicationContext(), activity);
+        intent.putExtra("type", type);
         intent.putExtra("name", item.getName());
         intent.putExtra("address", item.getMac());
         intent.putExtra("device_address", deviceAddress);
@@ -482,7 +503,7 @@ public class MainControl extends AppCompatActivity implements BluetoothService.B
 
     @NonNull
     private String normalizeMac(@NonNull String mac) {
-        return mac.replace(":", "").toUpperCase();
+        return mac.trim().replace(":", "").toUpperCase();
     }
 
 
