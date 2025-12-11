@@ -7,6 +7,7 @@ import static com.fapr.bluetoothcontrol.utils.DataUtil.DATA_DEVICE_ADDRESS;
 import static com.fapr.bluetoothcontrol.utils.DataUtil.DATA_DEVICE_NAME;
 import static com.fapr.bluetoothcontrol.utils.DataUtil.SETTINGS_DATA;
 import static com.fapr.bluetoothcontrol.utils.DataUtil.decrypt;
+import static com.fapr.bluetoothcontrol.utils.DataUtil.normalizeMac;
 import static com.fapr.bluetoothcontrol.utils.DataUtil.startsWithHeader;
 import static com.fapr.bluetoothcontrol.utils.SensorUtil.*;
 
@@ -42,6 +43,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.fapr.bluetoothcontrol.adapters.DeviceListAdapter;
+import com.fapr.bluetoothcontrol.databinding.ActivityMainControlBinding;
 import com.fapr.bluetoothcontrol.databinding.DialogAddBinding;
 import com.fapr.bluetoothcontrol.models.DeviceModel;
 import com.fapr.bluetoothcontrol.services.BluetoothService;
@@ -60,13 +62,7 @@ import java.util.HashSet;
 import java.util.List;
 
 public class MainControl extends AppCompatActivity implements BluetoothService.BluetoothEventListener, TabLayout.OnTabSelectedListener {
-    private String deviceAddress = "";
-    private Button buttonSearch;
-    private TextView label;
-    private TextView labelDevices;
-    private RecyclerView devicesList;
-    private ProgressBar progressBar;
-    private MaterialSwitch materialSwitch;
+    private ActivityMainControlBinding binding;
     private BluetoothAdapter bluetoothAdapter;
     private final List<DeviceModel> doorFound = new ArrayList<>();
     private final List<DeviceModel> lockFound = new ArrayList<>();
@@ -74,41 +70,31 @@ public class MainControl extends AppCompatActivity implements BluetoothService.B
     private String clientId;
     private BluetoothService service;
     private int type = SENSOR_TYPE_DOOR;
-    private TabLayout tabLayout;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main_control);
+        binding = ActivityMainControlBinding.inflate(getLayoutInflater());
+        setContentView(binding.getRoot());
 
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
+        ViewCompat.setOnApplyWindowInsetsListener(binding.main, (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
             return insets;
         });
 
-        materialSwitch = findViewById(R.id.bluetooth_switch);
-        label = findViewById(R.id.bluetooth_label);
-        labelDevices = findViewById(R.id.devices_label);
-        buttonSearch = findViewById(R.id.bluetooth_search);
-        progressBar = findViewById(R.id.progress);
-        tabLayout = findViewById(R.id.option_tabs);
-        MaterialButton logoutButton = findViewById(R.id.logout_button);
-        MaterialButton addButton = findViewById(R.id.add_button);
-
-        devicesList = findViewById(R.id.devices_list);
-        devicesList.setLayoutManager(new LinearLayoutManager(this));
+        binding.devicesList.setLayoutManager(new LinearLayoutManager(this));
         bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
         service = new BluetoothService(this, this);
 
         startControls();
         readDevices();
 
-        logoutButton.setOnClickListener(view -> logout());
-        addButton.setOnClickListener(view -> addDevice());
-        materialSwitch.setOnClickListener(view -> handleBluetoothState());
-        buttonSearch.setOnClickListener(view -> handleSearchDevices());
-        tabLayout.addOnTabSelectedListener(this);
+        binding.logoutButton.setOnClickListener(view -> logout());
+        binding.addButton.setOnClickListener(view -> addDevice());
+        binding.bluetoothSwitch.setOnClickListener(view -> handleBluetoothState());
+        binding.bluetoothSearch.setOnClickListener(view -> handleSearchDevices());
+        binding.optionTabs.addOnTabSelectedListener(this);
 
         if(service.isConnected()) {
             tryConnection();
@@ -188,10 +174,27 @@ public class MainControl extends AppCompatActivity implements BluetoothService.B
 
         if(address.isEmpty()) return;
 
+        // Determine device type and authorization
+        int deviceType = SENSOR_TYPE_DOOR;
+        boolean isAuthorized = false;
+        
         if(name.startsWith("ELOCK")) {
-            handleItemClick(new DeviceModel(name, address), MotorControl.class);
-        } else if(!name.isEmpty()) {
-            handleItemClick(new DeviceModel(name, address), DoorControl.class);
+            deviceType = SENSOR_TYPE_LOCK;
+            String mac = normalizeMac(address);
+            isAuthorized = devices.contains(mac);
+        } else {
+            String mac = normalizeMac(address);
+            if (devices.contains(mac)) {
+                deviceType = SENSOR_TYPE_DOOR;
+                isAuthorized = true;
+            } else if (devices.contains("ANT-" + mac)) {
+                deviceType = SENSOR_TYPE_LOCK;
+                isAuthorized = true;
+            }
+        }
+        
+        if (isAuthorized) {
+            handleItemClick(new DeviceModel(name, address), deviceType);
         }
     }
 
@@ -212,39 +215,39 @@ public class MainControl extends AppCompatActivity implements BluetoothService.B
 
     private void startControls() {
         if (!service.isConnected()) {
-            buttonSearch.setEnabled(false);
-            materialSwitch.setChecked(false);
-            label.setText("El movil tiene la conexión Bluetooth apagada");
+            binding.bluetoothSearch.setEnabled(false);
+            binding.bluetoothSwitch.setChecked(false);
+            binding.bluetoothLabel.setText("El movil tiene la conexión Bluetooth apagada");
             return;
         }
 
-        materialSwitch.setChecked(true);
-        label.setText("El movil tiene la conexión Bluetooth encendida");
+        binding.bluetoothSwitch.setChecked(true);
+        binding.bluetoothLabel.setText("El movil tiene la conexión Bluetooth encendida");
     }
 
     private void hideSearchViews() {
-        if(type == SENSOR_TYPE_DOOR) buttonSearch.setText("Buscar chapa");
-        if(type == SENSOR_TYPE_LOCK) buttonSearch.setText("Buscar anti-asalto");
+        if(type == SENSOR_TYPE_DOOR) binding.bluetoothSearch.setText("Buscar chapa");
+        if(type == SENSOR_TYPE_LOCK) binding.bluetoothSearch.setText("Buscar anti-asalto");
 
-        materialSwitch.setEnabled(true);
-        buttonSearch.setEnabled(true);
-        progressBar.setVisibility(View.GONE);
+        binding.bluetoothSwitch.setEnabled(true);
+        binding.bluetoothSearch.setEnabled(true);
+        binding.progress.setVisibility(View.GONE);
     }
 
     private void showListStatus(@NonNull List<DeviceModel> list) {
-        if (list.isEmpty()) labelDevices.setText("No se encontraron dispositivos");
-        else labelDevices.setText("Seleccione un dispositivo para conectarse");
+        if (list.isEmpty()) binding.devicesLabel.setText("No se encontraron dispositivos");
+        else binding.devicesLabel.setText("Seleccione un dispositivo para conectarse");
     }
 
     private void handleBluetoothState() {
         if (bluetoothAdapter == null) return;
 
-        buttonSearch.setEnabled(false);
+        binding.bluetoothSearch.setEnabled(false);
         if (service.isConnected()) {
-            label.setText("Desconectando...");
+            binding.bluetoothLabel.setText("Desconectando...");
             enableOrDisable(false);
         } else {
-            label.setText("Conectando...");
+            binding.bluetoothLabel.setText("Conectando...");
             enableOrDisable(true);
         }
     }
@@ -257,7 +260,7 @@ public class MainControl extends AppCompatActivity implements BluetoothService.B
                         Manifest.permission.BLUETOOTH,
                         Manifest.permission.BLUETOOTH_CONNECT
                 }, 0);
-                label.setText("Se requieren permisos para manejar la conexión");
+                binding.bluetoothLabel.setText("Se requieren permisos para manejar la conexión");
                 return;
             } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                 ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.BLUETOOTH}, 0);
@@ -266,7 +269,7 @@ public class MainControl extends AppCompatActivity implements BluetoothService.B
 
         BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
         if (bluetoothAdapter == null) {
-            label.setText("El dispositivo no soporta Bluetooth");
+            binding.bluetoothLabel.setText("El dispositivo no soporta Bluetooth");
             return;
         }
 
@@ -289,21 +292,21 @@ public class MainControl extends AppCompatActivity implements BluetoothService.B
     }
 
     private void handleSearchDevices() {
-        progressBar.setVisibility(View.VISIBLE);
-        buttonSearch.setEnabled(false);
-        materialSwitch.setEnabled(false);
-        buttonSearch.setText("Buscando...");
+        binding.progress.setVisibility(View.VISIBLE);
+        binding.bluetoothSearch.setEnabled(false);
+        binding.bluetoothSwitch.setEnabled(false);
+        binding.bluetoothSearch.setText("Buscando...");
 
         if(type == SENSOR_TYPE_DOOR) {
             doorFound.clear();
-            devicesList.setAdapter(new DeviceListAdapter(doorFound, item -> {}));
-            labelDevices.setText("Buscando dispositivos de chapa...");
+            binding.devicesList.setAdapter(new DeviceListAdapter(doorFound, item -> {}));
+            binding.devicesLabel.setText("Buscando dispositivos de chapa...");
             service.searchLEDevices();
         }
         else if(type == SENSOR_TYPE_LOCK) {
             lockFound.clear();
-            devicesList.setAdapter(new DeviceListAdapter(lockFound, item -> {}));
-            labelDevices.setText("Buscando dispositivos de anti-asalto...");
+            binding.devicesList.setAdapter(new DeviceListAdapter(lockFound, item -> {}));
+            binding.devicesLabel.setText("Buscando dispositivos de anti-asalto...");
             service.searchLEDevices();
             new Handler(Looper.getMainLooper()).postDelayed(() -> service.searchClassicDevices(), 3000);
         }
@@ -317,27 +320,27 @@ public class MainControl extends AppCompatActivity implements BluetoothService.B
 
     @Override
     public void onConnected() {
-        materialSwitch.setChecked(true);
-        buttonSearch.setEnabled(true);
-        label.setText("El movil ha activado la conexión Bluetooth");
+        binding.bluetoothSwitch.setChecked(true);
+        binding.bluetoothSearch.setEnabled(true);
+        binding.bluetoothLabel.setText("El movil ha activado la conexión Bluetooth");
     }
 
     @Override
     public void onDisconnected() {
-        materialSwitch.setChecked(false);
-        buttonSearch.setEnabled(false);
-        label.setText("El movil ha desactivado la conexión Bluetooth");
+        binding.bluetoothSwitch.setChecked(false);
+        binding.bluetoothSearch.setEnabled(false);
+        binding.bluetoothLabel.setText("El movil ha desactivado la conexión Bluetooth");
     }
 
     @Override
     public void onError(int error) {
         hideSearchViews();
-        labelDevices.setText("No se encontraron dispositivos");
+        binding.devicesLabel.setText("No se encontraron dispositivos");
         if(error == BluetoothUtil.ERROR_LOCATION_PERMISSION) {
             ActivityCompat.requestPermissions(this, new String[] {
                     Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION
             }, 0);
-            labelDevices.setText("Se requieren permisos de ubicación para escanear dispositivos");
+            binding.devicesLabel.setText("Se requieren permisos de ubicación para escanear dispositivos");
         }
 
         if(error == BluetoothUtil.ERROR_BLUETOOTH_PERMISSION) {
@@ -345,7 +348,7 @@ public class MainControl extends AppCompatActivity implements BluetoothService.B
                 ActivityCompat.requestPermissions(this, new String[]{
                         Manifest.permission.BLUETOOTH,
                         Manifest.permission.BLUETOOTH_CONNECT}, 0);
-                label.setText("Se requieren permisos de Bluetooth para manejar la conexión");
+                binding.bluetoothLabel.setText("Se requieren permisos de Bluetooth para manejar la conexión");
             }
         }
 
@@ -354,7 +357,7 @@ public class MainControl extends AppCompatActivity implements BluetoothService.B
                 ActivityCompat.requestPermissions(this, new String[]{
                         Manifest.permission.BLUETOOTH_SCAN,
                 }, 0);
-                labelDevices.setText("Se requieren permiso de escaneo bluetooth");
+                binding.devicesLabel.setText("Se requieren permiso de escaneo bluetooth");
             }
         }
 
@@ -367,7 +370,7 @@ public class MainControl extends AppCompatActivity implements BluetoothService.B
         }
 
         if(error == BluetoothUtil.ERROR_ON_SCAN) {
-            labelDevices.setText("No se encontraron dispositivos cercanos");
+            binding.devicesLabel.setText("No se encontraron dispositivos cercanos");
         }
 
         if(error == BluetoothUtil.ERROR_NOT_AVAILABLE) {
@@ -385,62 +388,61 @@ public class MainControl extends AppCompatActivity implements BluetoothService.B
     public void onFoundLEDevice(String name, String address, byte[] data) {
         if(address == null || name == null) return;
         if(!startsWithHeader(data)) return;
-        if(type == SENSOR_TYPE_DOOR)
-            handleFoundDevice(name, address, DoorControl.class, doorFound);
-        if(type == SENSOR_TYPE_LOCK)
-            handleFoundDevice(name, address, MotorControl.class, lockFound);
+        
+        if(type == SENSOR_TYPE_DOOR) {
+            handleFoundDevice(name, address, SENSOR_TYPE_DOOR, doorFound);
+        }
+        else if(type == SENSOR_TYPE_LOCK) {
+            handleFoundDevice(name, address, SENSOR_TYPE_LOCK, lockFound);
+        }
     }
 
     @SuppressLint("HardwareIds")
     @Override
     public void onFoundClassicDevice(String name, String address) {
-        deviceAddress = bluetoothAdapter.getAddress();
-        //deviceAddress = getBluetoothMac();
         if(address == null || name == null) return;
         if(!name.startsWith("ELOCK")) return;
-        handleFoundDevice(name, address, MotorControl.class, lockFound);
+        
+        handleFoundDevice(name, address, SENSOR_TYPE_LOCK, lockFound);
     }
 
-    private void handleFoundDevice(String name, String address, Class<?> activity, List<DeviceModel> list) {
+    private void handleFoundDevice(String name, String address, int deviceType, List<DeviceModel> list) {
         if (name == null) return;
         for (DeviceModel item : list) {
             if (item.getName().equals(name)) return;
         }
         list.add(new DeviceModel(name, address));
-        devicesList.setAdapter(new DeviceListAdapter(list, item -> handleItemClick(item, activity)));
+        binding.devicesList.setAdapter(new DeviceListAdapter(list, item -> handleItemClick(item, deviceType)));
     }
 
-    private void handleItemClick(DeviceModel item, Class<?> activity) {
+    private void handleItemClick(DeviceModel item, int deviceType) {
         if (!service.isConnected()) {
             showAlert("Se requiere de conexión Bluetooth para conectar con: " + item.getName());
             return;
         }
 
         String mac = normalizeMac(item.getMac());
-        String prefix = "ANT-" + mac;
         boolean autorizado = false;
 
-        if (type == SENSOR_TYPE_DOOR) {
-            if (devices.contains(mac)) {
-                autorizado = true;
-            }
-        } else if (type == SENSOR_TYPE_LOCK) {
-            if (devices.contains(prefix)) {
-                autorizado = true;
+        if (deviceType == SENSOR_TYPE_DOOR) {
+            autorizado = devices.contains(mac);
+        } else if (deviceType == SENSOR_TYPE_LOCK) {
+            if (item.getName().startsWith("ELOCK")) {
+                autorizado = devices.contains(mac);
+            } else {
+                autorizado = devices.contains("ANT-" + mac);
             }
         }
 
         if (!autorizado) {
-            Log.v("Validation", "MAC=" + item.getMac() + " Normalizada=" + mac + " Lista=" + devices);
             showAlert("El dispositivo no está registrado con el cliente. Verifique con el administrador o pide una llave.");
             return;
         }
 
-        Intent intent = new Intent(getApplicationContext(), activity);
-        intent.putExtra("type", type);
+        Intent intent = new Intent(getApplicationContext(), UnifiedControl.class);
+        intent.putExtra("type", deviceType);
         intent.putExtra("name", item.getName());
         intent.putExtra("address", item.getMac());
-        intent.putExtra("device_address", deviceAddress);
         startActivity(intent);
     }
 
@@ -459,35 +461,35 @@ public class MainControl extends AppCompatActivity implements BluetoothService.B
         hideSearchViews();
         if(type == SENSOR_TYPE_DOOR) {
             showListStatus(doorFound);
-            tabLayout.selectTab(tabLayout.getTabAt(0), true);
+            binding.optionTabs.selectTab(binding.optionTabs.getTabAt(0), true);
         }
 
         if(type == SENSOR_TYPE_LOCK) {
             showListStatus(lockFound);
-            tabLayout.selectTab(tabLayout.getTabAt(1), true);
+            binding.optionTabs.selectTab(binding.optionTabs.getTabAt(1), true);
         }
     }
 
     @Override
     public void onTabSelected(@NonNull TabLayout.Tab tab) {
-        if(bluetoothAdapter != null && bluetoothAdapter.isEnabled() && !buttonSearch.isEnabled()) {
-            if(type == SENSOR_TYPE_DOOR) tabLayout.selectTab(tabLayout.getTabAt(0), true);
-            if(type == SENSOR_TYPE_LOCK) tabLayout.selectTab(tabLayout.getTabAt(1), true);
+        if(bluetoothAdapter != null && bluetoothAdapter.isEnabled() && !binding.bluetoothSearch.isEnabled()) {
+            if(type == SENSOR_TYPE_DOOR) binding.optionTabs.selectTab(binding.optionTabs.getTabAt(0), true);
+            if(type == SENSOR_TYPE_LOCK) binding.optionTabs.selectTab(binding.optionTabs.getTabAt(1), true);
         }
 
-        int pos = tabLayout.getSelectedTabPosition();
+        int pos = binding.optionTabs.getSelectedTabPosition();
         if(pos == 0) {
             type = SENSOR_TYPE_DOOR;
             showListStatus(doorFound);
-            devicesList.setAdapter(new DeviceListAdapter(doorFound, item -> handleItemClick(item, DoorControl.class)));
-            buttonSearch.setText("Buscar chapa");
+            binding.devicesList.setAdapter(new DeviceListAdapter(doorFound, item -> handleItemClick(item, SENSOR_TYPE_DOOR)));
+            binding.bluetoothSearch.setText("Buscar chapa");
         }
 
         if(pos == 1) {
             type = SENSOR_TYPE_LOCK;
             showListStatus(lockFound);
-            devicesList.setAdapter(new DeviceListAdapter(lockFound, item -> handleItemClick(item, MotorControl.class)));
-            buttonSearch.setText("Buscar anti-asalto");
+            binding.devicesList.setAdapter(new DeviceListAdapter(lockFound, item -> handleItemClick(item, SENSOR_TYPE_LOCK)));
+            binding.bluetoothSearch.setText("Buscar anti-asalto");
         }
     }
 
@@ -499,44 +501,5 @@ public class MainControl extends AppCompatActivity implements BluetoothService.B
     @Override
     public void onTabReselected(TabLayout.Tab tab) {
 
-    }
-
-    @NonNull
-    private String normalizeMac(@NonNull String mac) {
-        return mac.trim().replace(":", "").toUpperCase();
-    }
-
-
-    @Nullable
-    public static String getBluetoothMac() {
-        try {
-            List<NetworkInterface> interfaces = Collections.list(NetworkInterface.getNetworkInterfaces());
-            Log.v("SIZE", interfaces.size() + "");
-            for (NetworkInterface networkInterface : interfaces) {
-                String interfaceName = networkInterface.getName().toLowerCase(); // Normalizar a minúsculas
-                boolean v = interfaceName.contains("bluetooth") || interfaceName.contains("bt") ||
-                        interfaceName.contains("bnep") || interfaceName.contains("hci") || interfaceName.equals("wlan0");
-                Log.v("BLUETOOTH", "Interface: " + interfaceName + ", Valid: " + v);
-                if (v) {
-
-                    byte[] macBytes = networkInterface.getHardwareAddress();
-                    Log.v("BLUETOOTH", "MAC Bytes: " + Arrays.toString(macBytes));
-                    if (macBytes == null) {
-                        return null;
-                    }
-                    StringBuilder macAddress = new StringBuilder();
-                    for (byte b : macBytes) {
-                        macAddress.append(String.format("%02X:", b));
-                    }
-                    if (macAddress.length() > 0) {
-                        macAddress.deleteCharAt(macAddress.length() - 1);
-                    }
-                    return macAddress.toString();
-                }
-            }
-        } catch (Exception e) {
-            Log.e("BLUETOOTH", "Error al obtener la dirección MAC", e);
-        }
-        return null;
     }
 }

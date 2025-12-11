@@ -189,6 +189,55 @@
                     android:layout_height="wrap_content" />
 
             </LinearLayout>
+            
+            <LinearLayout
+                android:layout_marginTop="8dp"
+                android:layout_marginStart="16dp"
+                android:paddingHorizontal="4dp"
+                android:orientation="vertical"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content">
+
+                <com.google.android.material.button.MaterialButtonToggleGroup
+                    android:layout_gravity="center_horizontal"
+                    android:id="@+id/parking_toggle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content">
+
+                    <Button
+                        style="@style/Widget.Material3.Button.IconButton.Outlined"
+                        android:backgroundTint="@color/color_toggle_outline_background"
+                        android:id="@+id/parking_button"
+                        android:layout_gravity="center_horizontal"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:contentDescription="Tiempo"
+                        android:drawableTint="@color/color_toggle_outline_tint"
+                        android:drawableLeft="@drawable/baseline_local_parking_24"
+                        tools:ignore="RtlHardcoded,UnusedAttribute" />
+
+                </com.google.android.material.button.MaterialButtonToggleGroup>
+
+                <TextView
+                    android:id="@+id/parking_button_label_1"
+                    style="@style/TextAppearance.Material3.BodyMedium"
+                    android:layout_marginTop="4dp"
+                    android:layout_gravity="center_horizontal"
+                    android:text="Modo"
+                    android:alpha="0.7"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" />
+
+                <TextView
+                    android:id="@+id/parking_button_label_2"
+                    style="@style/TextAppearance.Material3.BodyMedium"
+                    android:layout_gravity="center_horizontal"
+                    android:text="parking"
+                    android:alpha="0.7"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" />
+
+            </LinearLayout>
 
         </com.google.android.flexbox.FlexboxLayout>
 

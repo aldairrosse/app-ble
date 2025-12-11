@@ -76,4 +76,9 @@ public class DataUtil {
         return new String(original, StandardCharsets.UTF_8);
     }
 
+    @NonNull
+    public static String normalizeMac(@NonNull String mac) {
+        return mac.trim().replace(":", "").toUpperCase();
+    }
+
 }
